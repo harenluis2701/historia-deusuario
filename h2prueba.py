@@ -1,96 +1,146 @@
-# ==========================================
-# SISTEMA DE GESTIÓN DE INVENTARIO
-# ==========================================
-# Lista principal que almacenará los diccionarios de productos
+# app.py
+import servicios
+import archivos
 
-inventario = []
+def solicitar_flotante(mensaje):
+    """Asegura que el usuario ingrese un número flotante válido y positivo."""
+    while True:
+        try:
+            valor = float(input(mensaje))
+            if valor < 0:
+                print("El valor no puede ser negativo. Intenta de nuevo.")
+            else:
+                return valor
+        except ValueError:
+            print("Entrada inválida. Por favor ingresa un número.")
 
-def agregar_producto(inventario):
-    """Solicita los datos del producto y los agrega al inventario."""
-    print("\n--- Agregar Nuevo Producto ---")
-    nombre = input("Ingresa el nombre del producto: ")
-    
-    # Validamos que el precio y cantidad sean números válidos
-    try:
-        precio = float(input("Ingresa el precio del producto: "))
-        cantidad = int(input("Ingresa la cantidad del producto: "))
-        
-        # Se crea el diccionario del producto
-        producto = {"nombre": nombre, "precio": precio, "cantidad": cantidad}
-        
-        # Se agrega a la lista del inventario
-        inventario.append(producto)
-        print(f"¡Producto '{nombre}' agregado con éxito!")
-    except ValueError:
-        print("Error: El precio debe ser un número y la cantidad un número entero. Inténtalo de nuevo.")
+def solicitar_entero(mensaje):
+    """Asegura que el usuario ingrese un número entero válido y positivo."""
+    while True:
+        try:
+            valor = int(input(mensaje))
+            if valor < 0:
+                print("El valor no puede ser negativo. Intenta de nuevo.")
+            else:
+                return valor
+        except ValueError:
+            print("Entrada inválida. Por favor ingresa un número entero.")
 
-def mostrar_inventario(inventario):
-    """Muestra todos los productos registrados en el inventario."""
-    print("\n--- Inventario Actual ---")
-    
-    # Verificamos si la lista está vacía
-    if not inventario:
-        print("El inventario está vacío. No hay productos para mostrar.")
-    else:
-        # Recorremos la lista con un bucle for
-        for producto in inventario:
-            print(f"Producto: {producto['nombre']} | Precio: {producto['precio']} | Cantidad: {producto['cantidad']}")
+def main():
+    inventario = []
 
-def calcular_estadisticas(inventario):
-    """Calcula el valor total del inventario y la cantidad de productos."""
-    print("\n--- Estadísticas del Inventario ---")
-    
-    if not inventario:
-         print("El inventario está vacío. No hay estadísticas para calcular.")
-         return
+    while True:
+        print("\n" + "="*30)
+        print("SISTEMA DE INVENTARIO")
+        print("="*30)
+        print("1. Agregar producto")
+        print("2. Mostrar inventario")
+        print("3. Buscar producto")
+        print("4. Actualizar producto")
+        print("5. Eliminar producto")
+        print("6. Estadísticas")
+        print("7. Guardar CSV")
+        print("8. Cargar CSV")
+        print("9. Salir")
+        print("="*30)
 
-    total_productos = 0
-    valor_total_inventario = 0.0
-    
-    # Recorremos el inventario para hacer los cálculos
-    for producto in inventario:
-        total_productos += producto['cantidad']
-        valor_total_inventario += (producto['precio'] * producto['cantidad'])
-        
-    print(f"Cantidad total de productos registrados: {total_productos}")
-    print(f"Valor total del inventario: {valor_total_inventario}")
+        opcion = input("Elige una opción (1-9): ").strip()
 
-# ==========================================
-# FLUJO PRINCIPAL DEL PROGRAMA
-# ==========================================
+        if opcion == '1':
+            nombre = input("Nombre del producto: ")
+            precio = solicitar_flotante("Precio del producto: ")
+            cantidad = solicitar_entero("Cantidad en stock: ")
+            
+            if servicios.buscar_producto(inventario, nombre):
+                print("\nEse producto ya existe. Usa la opción 4 para actualizarlo.")
+            else:
+                servicios.agregar_producto(inventario, nombre, precio, cantidad)
+                print(f"\nProducto '{nombre}' agregado con éxito.")
 
+        elif opcion == '2':
+            servicios.mostrar_inventario(inventario)
 
+        elif opcion == '3':
+            nombre = input("Ingresa el nombre a buscar: ")
+            prod = servicios.buscar_producto(inventario, nombre)
+            if prod:
+                print(f"\nEncontrado: {prod['nombre'].title()} | Precio: ${prod['precio']:.2f} | Stock: {prod['cantidad']}")
+            else:
+                print(f"\nProducto '{nombre}' no encontrado.")
 
-# Bucle while que mantiene el menú activo hasta que el usuario decida salir
-while True:
-    print("\n" + "="*30)
-    print(" MENÚ DE INVENTARIO")
-    print("="*30)
-    print("1. Agregar producto")
-    print("2. Mostrar inventario")
-    print("3. Calcular estadísticas")
-    print("4. Salir")
-    
-    opcion = input("Elige una opción (1-4): ")
-    
-    # Estructuras condicionales para procesar la opción del usuario
-    if opcion == '1':
-        agregar_producto(inventario)
-    elif opcion == '2':
-        mostrar_inventario(inventario)
-    elif opcion == '3':
-        calcular_estadisticas(inventario)
-    elif opcion == '4':
-        print("\nSaliendo del sistema de inventario... ¡Hasta luego!")
-        break # Rompe el bucle y finaliza el programa
-    else:
-        # Manejo de opciones inválidas
-        print("\nError: Opción inválida. Por favor, elige un número del 1 al 4.")
+        elif opcion == '4':
+            nombre = input("Nombre del producto a actualizar: ")
+            if servicios.buscar_producto(inventario, nombre):
+                print("Deja en blanco si no deseas cambiar el valor.")
+                n_precio = input("Nuevo precio: ")
+                n_cantidad = input("Nueva cantidad: ")
+                
+                # Validar inputs vacíos antes de enviar
+                n_precio = float(n_precio) if n_precio.strip() else None
+                n_cantidad = int(n_cantidad) if n_cantidad.strip() else None
+                
+                servicios.actualizar_producto(inventario, nombre, n_precio, n_cantidad)
+                print(f"\nProducto '{nombre}' actualizado.")
+            else:
+                print(f"\nProducto '{nombre}' no encontrado.")
 
-# ==========================================
-# OBJETIVO DE LA SEMANA RESUMIDO:
-# El objetivo de este ejercicio fue aplicar exitosamente estructuras 
-# condicionales (if/elif/else) y bucles (while y for) en Python, 
-# utilizando listas de diccionarios para gestionar datos de un inventario,
-# modularizando el código en funciones limpias y manejando validaciones básicas.
-# ==========================================
+        elif opcion == '5':
+            nombre = input("Nombre del producto a eliminar: ")
+            if servicios.eliminar_producto(inventario, nombre):
+                print(f"\nProducto '{nombre}' eliminado.")
+            else:
+                print(f"\nProducto '{nombre}' no encontrado.")
+
+        elif opcion == '6':
+            stats = servicios.calcular_estadisticas(inventario)
+            if stats:
+                print("\nESTADÍSTICAS DEL INVENTARIO")
+                print(f"Unidades totales en stock : {stats['unidades_totales']}")
+                print(f"Valor total del inventario: ${stats['valor_total']:.2f}")
+                print(f"Producto más caro         : {stats['mas_caro']['nombre'].title()} (${stats['mas_caro']['precio']:.2f})")
+                print(f"Producto con mayor stock  : {stats['mayor_stock']['nombre'].title()} ({stats['mayor_stock']['cantidad']} uds)")
+            else:
+                print("\nNo hay datos para calcular estadísticas.")
+
+        elif opcion == '7':
+            ruta = input("Ingresa el nombre del archivo para guardar (ej. datos.csv): ")
+            if not ruta.endswith('.csv'): ruta += '.csv'
+            archivos.guardar_csv(inventario, ruta)
+
+        elif opcion == '8':
+            ruta = input("Ingresa la ruta del archivo a cargar (ej. datos.csv): ")
+            if not ruta.endswith('.csv'): ruta += '.csv'
+            
+            nuevos_productos, errores = archivos.extraer_datos_csv(ruta)
+            
+            if nuevos_productos is not None:
+                print(f"\nSe encontraron {len(nuevos_productos)} productos válidos.")
+                if errores > 0:
+                    print(f"{errores} filas inválidas fueron omitidas.")
+                
+                decision = input("¿Sobrescribir el inventario actual? (S/N): ").strip().upper()
+                
+                if decision == 'S':
+                    inventario.clear()
+                    inventario.extend(nuevos_productos)
+                    print("\nInventario sobrescrito con éxito.")
+                else:
+                    # Lógica de fusión: Si existe suma cantidad y actualiza precio al más reciente
+                    for np in nuevos_productos:
+                        existente = servicios.buscar_producto(inventario, np["nombre"])
+                        if existente:
+                            nueva_cant = existente["cantidad"] + np["cantidad"]
+                            servicios.actualizar_producto(inventario, np["nombre"], nuevo_precio=np["precio"], nueva_cantidad=nueva_cant)
+                        else:
+                            inventario.append(np)
+                    print("\nInventario fusionado con éxito (cantidades sumadas, precios actualizados).")
+
+        elif opcion == '9':
+            print("\nSaliendo del sistema. ¡Hasta luego!")
+            break
+
+        else:
+            print("\nOpción no válida. Por favor, selecciona un número del 1 al 9.")
+
+if __name__ == "__main__":
+    main()
